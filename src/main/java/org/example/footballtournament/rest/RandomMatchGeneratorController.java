@@ -27,14 +27,14 @@ public class RandomMatchGeneratorController {
     public ResponseEntity<Gameplan> generateRandomMatches(@Valid @RequestBody LeagueRequest leagueRequest) {
         logger.info("Received request to generate random matches for league: {}", leagueRequest.league());
 
-        var gameplan = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
+        var firstStage = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
 
-        var matchTime = gameplan.matchDays().getLast()
+        var matchTime = firstStage.matchDays().getLast()
                 .matches().getLast().matchTime()
                 .plusWeeks(3);
-        var secondStage = matchScheduleService.swapSchedule(gameplan, matchTime);
+        var secondStage = matchScheduleService.swapSchedule(firstStage, matchTime);
 
-        return ResponseEntity.ok(new Gameplan(gameplan, secondStage));
+        return ResponseEntity.ok(new Gameplan(firstStage, secondStage));
     }
 
 }

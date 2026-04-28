@@ -106,21 +106,14 @@ public class MatchScheduleService {
     }
 
     public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
-        LocalDate incomingDate = startDate.toLocalDate();
 
-        List<Match> matchDays = stagePlan.matchDays()
+        LinkedHashSet<Match> matchDays = stagePlan.matchDays()
                 .stream()
                 .map(MatchDay::matches)
                 .flatMap(Collection::stream)
-                .collect(Collectors.toUnmodifiableList());
+                .map(OrderedMatch::swapTeams)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        Set<Match> swappedMatches = new LinkedHashSet<>();
-        for (Match match : matchDays) {
-            swappedMatches.add(new OrderedMatch(match.homeTeam(), match.awayTeam(), startDate));
-
-            incomingDate = incomingDate.plusDays(7);
-        }
-
-        return new StagePlan(getMatchDays(swappedMatches, startDate));
+        return new StagePlan(getMatchDays(matchDays, startDate));
     }
 }
