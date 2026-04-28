@@ -5,7 +5,6 @@ import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,7 +14,7 @@ import java.util.stream.IntStream;
 public class MatchScheduleService {
 
 
-    public StagePlan generateMatchSchedule(List<TeamRequest> teams) {
+    public Gameplan.StagePlan generateMatchSchedule(List<TeamRequest> teams) {
 
         Set<Match> spieltagSet = new LinkedHashSet<>();
 
@@ -29,13 +28,13 @@ public class MatchScheduleService {
 
         var matchDays = getMatchDays(spieltagSet);
 
-        return new StagePlan(matchDays);
+        return new Gameplan.StagePlan(matchDays);
     }
 
-    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet, LocalDateTime startDate) {
+    public static @NonNull ArrayList<Gameplan.MatchDay> getMatchDays(Set<Match> spieltagSet, LocalDateTime startDate) {
         LocalDateTime date = startDate == null ? LocalDateTime.parse("2020-10-17T17:00") : startDate;
 
-        var matchDays = new ArrayList<MatchDay>();
+        var matchDays = new ArrayList<Gameplan.MatchDay>();
         for (var match : spieltagSet) {
             if (!matchDays.isEmpty()) {
                 // start incrementing weeks after the first match
@@ -45,7 +44,7 @@ public class MatchScheduleService {
             if (matchDays.isEmpty() || matchDays.getLast().matches().size() == 3) {
                 var matches = new ArrayList<OrderedMatch>();
                 matches.add(createOrderedMatch(match, date));
-                matchDays.add(new MatchDay(matches));
+                matchDays.add(new Gameplan.MatchDay(matches));
 
                 continue;
             }
@@ -55,7 +54,7 @@ public class MatchScheduleService {
         return matchDays;
     }
 
-    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet) {
+    public static @NonNull ArrayList<Gameplan.MatchDay> getMatchDays(Set<Match> spieltagSet) {
         return getMatchDays(spieltagSet, null);
     }
 
@@ -95,6 +94,18 @@ public class MatchScheduleService {
         return matchSet;
     }
 
+    public Gameplan.StagePlan swapSchedule(Gameplan.StagePlan stagePlan, LocalDateTime startDate) {
+
+        LinkedHashSet<Match> matchDays = stagePlan.matchDays()
+                .stream()
+                .map(Gameplan.MatchDay::matches)
+                .flatMap(Collection::stream)
+                .map(OrderedMatch::swapTeams)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return new Gameplan.StagePlan(getMatchDays(matchDays, startDate));
+    }
+
     private static @NonNull OrderedMatch createOrderedMatch(Match match, LocalDateTime matchTime) {
         return new OrderedMatch(match.homeTeam(), match.awayTeam(), matchTime);
     }
@@ -103,17 +114,5 @@ public class MatchScheduleService {
         var randomIndex = random.nextInt(teams.size());
 
         return teams.get(randomIndex);
-    }
-
-    public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
-
-        LinkedHashSet<Match> matchDays = stagePlan.matchDays()
-                .stream()
-                .map(MatchDay::matches)
-                .flatMap(Collection::stream)
-                .map(OrderedMatch::swapTeams)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        return new StagePlan(getMatchDays(matchDays, startDate));
     }
 }

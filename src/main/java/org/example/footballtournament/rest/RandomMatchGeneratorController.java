@@ -2,7 +2,6 @@ package org.example.footballtournament.rest;
 
 import jakarta.validation.Valid;
 import org.example.footballtournament.domain.Gameplan;
-import org.example.footballtournament.domain.StagePlan;
 import org.example.footballtournament.dto.LeagueRequest;
 import org.example.footballtournament.service.MatchScheduleService;
 import org.slf4j.Logger;
