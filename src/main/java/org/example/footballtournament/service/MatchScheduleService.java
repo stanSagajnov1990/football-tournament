@@ -2,13 +2,16 @@ package org.example.footballtournament.service;
 
 import org.example.footballtournament.domain.Gameplan;
 import org.example.footballtournament.domain.Match;
+import org.example.footballtournament.domain.MatchDay;
+import org.example.footballtournament.domain.OrderedMatch;
 import org.example.footballtournament.dto.TeamRequest;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Service
 public class MatchScheduleService {
@@ -16,76 +19,84 @@ public class MatchScheduleService {
 
     public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
 
-        Set<String> matchSet = new HashSet<>();
+        Set<Match> spieltagSet = new LinkedHashSet<>();
 
-        Set<Match> spieltagSet = new HashSet<>();
+        // 5 Spieltage
+        IntStream.range(0, 5).forEach(i -> {
+            System.out.println(i);
 
-        var random = new Random();
-
-
-        while (spieltagSet.size() < 2) {
-
-            var teamName = generateRandomTeam(teams, random);
-            var teamName2 = generateRandomTeam(teams, random);
-
-            if (teamName.equals(teamName2)) {
-                continue;
-            }
-
-            var match = new Match(teamName, teamName2);
-
-            if (spieltagSet.contains(match)) {
-                continue;
-            }
-
-            matchSet.add(teamName);
-
-            System.out.println(teamName);
-
-        }
-
-        teams.forEach(team -> {
+            var matchDay = generateMatchDay(teams, spieltagSet);
+            spieltagSet.addAll(matchDay);
         });
 
-        return new Gameplan(null);
+        LocalDateTime date = LocalDateTime.parse("2020-10-17T17:00");
+
+        var matchDays = new ArrayList<MatchDay>();
+        for (var match : spieltagSet) {
+            if (!matchDays.isEmpty()) {
+                // start incrementing weeks after the first match
+                date = date.plusDays(7);
+            }
+
+            if (matchDays.isEmpty() || matchDays.getLast().matches().size() == 3) {
+                var matches = new ArrayList<OrderedMatch>();
+                matches.add(createOrderedMatch(match, date));
+                matchDays.add(new MatchDay(matches));
+
+                continue;
+            }
+
+            matchDays.getLast().matches().add(createOrderedMatch(match, date));
+        }
+
+
+        return new Gameplan(matchDays);
     }
 
-    public Set<Match> generateMatchDay(List<TeamRequest> teams) {
+    public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
+        var incomingTeams = new ArrayList<>(teams);
 
-        Set<String> teamSet = new HashSet<>();
-        Set<Match> matchSet = new HashSet<>();
+        Set<String> teamSet = new LinkedHashSet<>();
+        Set<Match> matchSet = new LinkedHashSet<>();
         var random = new Random();
 
         while (matchSet.size() <= 2) {
 
-            var teamName = generateRandomTeam(teams, random);
-            var teamName2 = generateRandomTeam(teams, random);
+            var teamName = generateRandomTeam(incomingTeams, random);
+            var teamName2 = generateRandomTeam(incomingTeams, random);
 
-            if (teamName.equals(teamName2) || (teamSet.contains(teamName) || teamSet.contains(teamName2))) {
+            if (teamName.equals(teamName2) || (teamSet.contains(teamName.name()) || teamSet.contains(teamName2.name()))) {
                 continue;
             }
 
-            var match = new Match(teamName, teamName2);
+            var match = new Match(teamName.name(), teamName2.name());
 
-            if (matchSet.contains(match)) {
+            if (matchSet.contains(match) || spieltagSet.contains(match)) {
                 continue;
             }
 
             matchSet.add(match);
-            teamSet.add(teamName);
-            teamSet.add(teamName2);
+            teamSet.add(teamName.name());
+            teamSet.add(teamName2.name());
 
             System.out.println(teamName);
+
+            incomingTeams.remove(teamName);
+            incomingTeams.remove(teamName2);
 
         }
 
         return matchSet;
     }
 
-    private static String generateRandomTeam(List<TeamRequest> teams, Random random) {
-        var randomIndex = random.nextInt(6);
+    private static @NonNull OrderedMatch createOrderedMatch(Match match, LocalDateTime matchTime) {
+        return new OrderedMatch(match.homeTeam(), match.awayTeam(), matchTime);
+    }
 
-        var teamName = teams.get(randomIndex).name();
+    private static TeamRequest generateRandomTeam(List<TeamRequest> teams, Random random) {
+        var randomIndex = random.nextInt(teams.size());
+
+        var teamName = teams.get(randomIndex);
         return teamName;
     }
 }

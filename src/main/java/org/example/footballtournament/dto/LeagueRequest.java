@@ -1,6 +1,8 @@
 package org.example.footballtournament.dto;
 
-public record LeagueRequest(String league, String country, TeamRequest[] teams) {
+import java.util.List;
+
+public record LeagueRequest(String league, String country, List<TeamRequest> teams) {
 
 
 }

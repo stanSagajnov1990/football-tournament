@@ -1,0 +1,17 @@
+package org.example.footballtournament.domain;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public record OrderedMatch(
+        String homeTeam,
+        String awayTeam,
+        LocalDateTime matchTime
+) {
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    @Override
+    public String toString() {
+        return "%s;%s;%s".formatted(DATE_FORMATTER.format(matchTime), homeTeam, awayTeam);
+    }
+}

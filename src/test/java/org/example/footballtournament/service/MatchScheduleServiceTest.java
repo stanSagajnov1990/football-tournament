@@ -7,10 +7,13 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class MatchScheduleServiceTest {
+
+    MatchScheduleService sut = new MatchScheduleService();
 
     @Test
     void generateMatchSchedule() {
@@ -24,12 +27,21 @@ class MatchScheduleServiceTest {
         teams.add(new TeamRequest("Team F", null));
 
         // Act
-        MatchScheduleService matchScheduleService = new MatchScheduleService();
-        var result = matchScheduleService.generateMatchSchedule(teams);
+        var result = sut.generateMatchSchedule(teams);
 
         // Assert
+        assertThat(result.matchDays()).hasSize(5);
 
-//        Assertions.assertThat(result.matches).hasSize(5);
+        for (var i = 0; i < result.matchDays().size(); i++) {
+            var matchDay = result.matchDays().get(i);
+            System.out.println("Spieltag " + (i + 1));
+
+            matchDay.matches().forEach(match -> {
+                System.out.println(match);
+            });
+        }
+
+        System.out.println(result.matchDays());
     }
 
     @Test
@@ -44,11 +56,10 @@ class MatchScheduleServiceTest {
         teams.add(new TeamRequest("Team F", null));
 
         // Act
-        MatchScheduleService matchScheduleService = new MatchScheduleService();
-        var result = matchScheduleService.generateMatchDay(teams);
+        var result = sut.generateMatchDay(teams, Set.of());
 
         // Assert
-        Assertions.assertThat(result).hasSize(3);
+        assertThat(result).hasSize(3);
 
         var allReturnedTeams = result.stream()
                 .map(match -> { return List.of(match.homeTeam(), match.awayTeam()); })
@@ -56,7 +67,7 @@ class MatchScheduleServiceTest {
                 .sorted()
                 .toList();
 
-        Assertions.assertThat(teams.stream().map(TeamRequest::name)).isEqualTo(allReturnedTeams);
+        assertThat(teams.stream().map(TeamRequest::name)).isEqualTo(allReturnedTeams);
 
     }
 }

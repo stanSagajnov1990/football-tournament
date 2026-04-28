@@ -1,6 +1,7 @@
 package org.example.footballtournament.rest;
 
 import jakarta.validation.Valid;
+import org.example.footballtournament.domain.Gameplan;
 import org.example.footballtournament.dto.LeagueRequest;
 import org.example.footballtournament.service.MatchScheduleService;
 import org.slf4j.Logger;
@@ -26,12 +27,13 @@ public class RandomMatchGeneratorController {
     }
 
     @PostMapping("/generate-random-matches")
-    public ResponseEntity generateRandomMatches(@Valid @RequestBody LeagueRequest leagueRequest) {
+    public ResponseEntity<Gameplan> generateRandomMatches(@Valid @RequestBody LeagueRequest leagueRequest) {
         logger.info("Received request to generate random matches for league: {}", leagueRequest.league());
 
-//        objectMapper.readValue();
+        var gameplan = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
 
-        return ResponseEntity.ok("Random matches generated successfully");
+
+        return ResponseEntity.ok(gameplan);
     }
 
 }
