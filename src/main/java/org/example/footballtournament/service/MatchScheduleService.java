@@ -5,6 +5,7 @@ import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ import java.util.stream.IntStream;
 public class MatchScheduleService {
 
 
-    public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
+    public StagePlan generateMatchSchedule(List<TeamRequest> teams) {
 
         Set<Match> spieltagSet = new LinkedHashSet<>();
 
@@ -28,11 +29,11 @@ public class MatchScheduleService {
 
         var matchDays = getMatchDays(spieltagSet);
 
-        return new Gameplan(matchDays);
+        return new StagePlan(matchDays);
     }
 
-    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet) {
-        LocalDateTime date = LocalDateTime.parse("2020-10-17T17:00");
+    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet, LocalDateTime startDate) {
+        LocalDateTime date = startDate == null ? LocalDateTime.parse("2020-10-17T17:00") : startDate;
 
         var matchDays = new ArrayList<MatchDay>();
         for (var match : spieltagSet) {
@@ -52,6 +53,10 @@ public class MatchScheduleService {
             matchDays.getLast().matches().add(createOrderedMatch(match, date));
         }
         return matchDays;
+    }
+
+    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet) {
+        return getMatchDays(spieltagSet, null);
     }
 
     public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
@@ -97,19 +102,25 @@ public class MatchScheduleService {
     private static TeamRequest generateRandomTeam(List<TeamRequest> teams, Random random) {
         var randomIndex = random.nextInt(teams.size());
 
-        var teamName = teams.get(randomIndex);
-        return teamName;
+        return teams.get(randomIndex);
     }
 
-    public Gameplan swapSchedule(Gameplan gameplan, LocalDateTime startDate) {
+    public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
+        LocalDate incomingDate = startDate.toLocalDate();
 
-        LinkedHashSet<Match> matchDays = gameplan.matchDays()
+        List<Match> matchDays = stagePlan.matchDays()
                 .stream()
                 .map(MatchDay::matches)
                 .flatMap(Collection::stream)
-                .map(OrderedMatch::swapTeams)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                .collect(Collectors.toUnmodifiableList());
 
-        return new Gameplan(getMatchDays(matchDays));
+        Set<Match> swappedMatches = new LinkedHashSet<>();
+        for (Match match : matchDays) {
+            swappedMatches.add(new OrderedMatch(match.homeTeam(), match.awayTeam(), startDate));
+
+            incomingDate = incomingDate.plusDays(7);
+        }
+
+        return new StagePlan(getMatchDays(swappedMatches, startDate));
     }
 }

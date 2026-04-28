@@ -2,6 +2,7 @@ package org.example.footballtournament.rest;
 
 import jakarta.validation.Valid;
 import org.example.footballtournament.domain.Gameplan;
+import org.example.footballtournament.domain.StagePlan;
 import org.example.footballtournament.dto.LeagueRequest;
 import org.example.footballtournament.service.MatchScheduleService;
 import org.slf4j.Logger;
@@ -10,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import tools.jackson.databind.ObjectMapper;
-
-import java.time.LocalDateTime;
 
 @RestController
 public class RandomMatchGeneratorController {
@@ -31,10 +29,12 @@ public class RandomMatchGeneratorController {
 
         var gameplan = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
 
-        var matchTime = gameplan.matchDays().getFirst().matches().getFirst().matchTime();
+        var matchTime = gameplan.matchDays().getLast()
+                .matches().getLast().matchTime()
+                .plusWeeks(3);
         var secondStage = matchScheduleService.swapSchedule(gameplan, matchTime);
 
-        return ResponseEntity.ok(gameplan);
+        return ResponseEntity.ok(new Gameplan(gameplan, secondStage));
     }
 
 }
