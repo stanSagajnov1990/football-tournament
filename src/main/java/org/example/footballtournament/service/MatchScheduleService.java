@@ -1,16 +1,13 @@
 package org.example.footballtournament.service;
 
-import org.example.footballtournament.domain.Gameplan;
-import org.example.footballtournament.domain.Match;
-import org.example.footballtournament.domain.MatchDay;
-import org.example.footballtournament.domain.OrderedMatch;
+import org.example.footballtournament.domain.*;
 import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -29,6 +26,12 @@ public class MatchScheduleService {
             spieltagSet.addAll(matchDay);
         });
 
+        var matchDays = getMatchDays(spieltagSet);
+
+        return new Gameplan(matchDays);
+    }
+
+    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet) {
         LocalDateTime date = LocalDateTime.parse("2020-10-17T17:00");
 
         var matchDays = new ArrayList<MatchDay>();
@@ -48,9 +51,7 @@ public class MatchScheduleService {
 
             matchDays.getLast().matches().add(createOrderedMatch(match, date));
         }
-
-
-        return new Gameplan(matchDays);
+        return matchDays;
     }
 
     public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
@@ -69,7 +70,7 @@ public class MatchScheduleService {
                 continue;
             }
 
-            var match = new Match(teamName.name(), teamName2.name());
+            var match = new UnOrderedMatch(teamName.name(), teamName2.name());
 
             if (matchSet.contains(match) || spieltagSet.contains(match)) {
                 continue;
@@ -98,5 +99,17 @@ public class MatchScheduleService {
 
         var teamName = teams.get(randomIndex);
         return teamName;
+    }
+
+    public Gameplan swapSchedule(Gameplan gameplan, LocalDateTime startDate) {
+
+        LinkedHashSet<Match> matchDays = gameplan.matchDays()
+                .stream()
+                .map(MatchDay::matches)
+                .flatMap(Collection::stream)
+                .map(OrderedMatch::swapTeams)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return new Gameplan(getMatchDays(matchDays));
     }
 }

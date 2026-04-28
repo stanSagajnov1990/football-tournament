@@ -12,17 +12,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
+
 @RestController
 public class RandomMatchGeneratorController {
 
-    Logger logger = LoggerFactory.getLogger(RandomMatchGeneratorController.class);
-
-    private ObjectMapper objectMapper;
+    private static final Logger logger = LoggerFactory.getLogger(RandomMatchGeneratorController.class);
 
     private MatchScheduleService matchScheduleService;
 
-    public RandomMatchGeneratorController(ObjectMapper objectMapper, MatchScheduleService matchScheduleService) {
-        this.objectMapper = objectMapper;
+    public RandomMatchGeneratorController(MatchScheduleService matchScheduleService) {
         this.matchScheduleService = matchScheduleService;
     }
 
@@ -32,6 +31,8 @@ public class RandomMatchGeneratorController {
 
         var gameplan = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
 
+        var matchTime = gameplan.matchDays().getFirst().matches().getFirst().matchTime();
+        var secondStage = matchScheduleService.swapSchedule(gameplan, matchTime);
 
         return ResponseEntity.ok(gameplan);
     }

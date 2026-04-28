@@ -7,11 +7,15 @@ public record OrderedMatch(
         String homeTeam,
         String awayTeam,
         LocalDateTime matchTime
-) {
+) implements Match {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     @Override
     public String toString() {
         return "%s;%s;%s".formatted(DATE_FORMATTER.format(matchTime), homeTeam, awayTeam);
+    }
+
+    public OrderedMatch swapTeams() {
+        return new OrderedMatch(awayTeam, homeTeam, matchTime);
     }
 }
