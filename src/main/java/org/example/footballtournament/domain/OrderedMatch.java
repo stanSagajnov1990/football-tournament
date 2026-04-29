@@ -12,6 +12,10 @@ public record OrderedMatch(
 
     @Override
     public String toString() {
+        if (matchTime == null) {
+            return "%s;%s".formatted(homeTeam, awayTeam);
+        }
+
         return "%s;%s;%s".formatted(DATE_FORMATTER.format(matchTime), homeTeam, awayTeam);
     }
 

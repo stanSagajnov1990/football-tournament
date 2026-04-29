@@ -5,8 +5,8 @@ import java.util.List;
 public record Gameplan(StagePlan firstStage, StagePlan secondStage) {
 
     public record StagePlan(
-            List<MatchDay> matchDays
+            List<OrderedMatch> matches
     ) { }
 
-    public record MatchDay(List<OrderedMatch> matches) { }
+
 }
