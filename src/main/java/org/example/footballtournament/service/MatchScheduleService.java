@@ -1,5 +1,6 @@
 package org.example.footballtournament.service;
 
+import org.example.footballtournament.config.AppConfigProperties;
 import org.example.footballtournament.domain.*;
 import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
@@ -19,9 +20,15 @@ public class MatchScheduleService {
 
     private final static Logger log = getLogger(MatchScheduleService.class);
 
-    public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
+    private AppConfigProperties appConfigProperties;
 
-        var startDate = LocalDateTime.parse("2020-10-17T17:00");
+    public MatchScheduleService(AppConfigProperties appConfigProperties) {
+        this.appConfigProperties = appConfigProperties;
+    }
+
+    public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
+        // start date requited by business
+        var startDate = LocalDateTime.parse(appConfigProperties.tournament().startDate());
 
         Gameplan.StagePlan firstStage = generateStagePlan(teams, startDate);
 
@@ -35,20 +42,18 @@ public class MatchScheduleService {
 
         log.info("Generated gameplan - first stage: " );
         for (var match : gameplan.firstStage().matches()) {
-//            log.info(match.toString());
             System.out.println(match.toString());
         }
 
         log.info("Generated gameplan - second stage: ");
         for (var match : gameplan.secondStage().matches()) {
             System.out.println(match.toString());
-//            log.info(match.toString());
         }
         return gameplan;
     }
 
     public Gameplan.StagePlan generateStagePlan(List<TeamRequest> teams, LocalDateTime startDate) {
-        AtomicReference<LocalDateTime> gameStartDate = new AtomicReference<>(LocalDateTime.parse("2020-10-17T17:00"));
+        AtomicReference<LocalDateTime> gameStartDate = new AtomicReference<>(startDate);
 
         Set<OrderedMatch> spieltagSet = new LinkedHashSet<>();
         AtomicInteger index = new AtomicInteger(0);

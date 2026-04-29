@@ -1,3 +1,7 @@
 spring:
   application:
     name: football-tournament
+
+app:
+  tournament:
+    start-date: "2020-10-17T17:00"

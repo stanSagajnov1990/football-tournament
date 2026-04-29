@@ -1,5 +1,6 @@
 package org.example.footballtournament.service;
 
+import org.example.footballtournament.config.AppConfigProperties;
 import org.example.footballtournament.domain.Gameplan;
 import org.example.footballtournament.domain.OrderedMatch;
 import org.example.footballtournament.dto.TeamRequest;
@@ -15,7 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MatchScheduleServiceTest {
 
-    MatchScheduleService sut = new MatchScheduleService();
+    AppConfigProperties appConfigProperties = new AppConfigProperties(new AppConfigProperties.Tournament("2020-10-17T17:00"));
+
+    MatchScheduleService sut = new MatchScheduleService(appConfigProperties);
 
 
     @Test

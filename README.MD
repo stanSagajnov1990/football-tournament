@@ -4,8 +4,8 @@ A Spring Boot REST service that generates two-stage round-robin football match s
 
 ## How it works
 
-1. **First stage:** All teams play each other once (home/away randomly assigned), starting at a fixed date with weekly intervals (Saturdays at 17:00).
-2. **Second stage:** Same matchups, but home and away teams are swapped. Starts 3 weeks after the first stage ends.
+1. **First stage:** All teams play each other once (home/away determined by team order), one match per week starting from a configurable date.
+2. **Second stage:** Same matchups with home and away teams swapped. Starts 3 weeks after the first stage ends.
 
 For `n` teams, `n*(n-1)/2` matches are generated per stage.
 
@@ -26,11 +26,24 @@ For `n` teams, `n*(n-1)/2` matches are generated per stage.
 # Build
 ./mvnw clean package
 
-# Run
+# Run as REST server (default)
 ./mvnw spring-boot:run
+
+# Run as CLI application
+./mvnw spring-boot:run -Dspring-boot.run.mainClass=org.example.footballtournament.MyCliApp
 ```
 
-The server starts on port **8080**.
+The REST server starts on port **8080**.
+
+## Configuration
+
+The tournament start date is configurable in `src/main/resources/application.yaml`:
+
+```yaml
+app:
+  tournament:
+    start-date: "2020-10-17T17:00"
+```
 
 ## API
 
@@ -67,8 +80,7 @@ Generates a two-stage match schedule for the given teams.
         "homeTeam": "Best marketing",
         "awayTeam": "Hot operations",
         "matchTime": "2020-10-17T17:00:00"
-      },
-      ...
+      }
     ]
   },
   "secondStage": {
@@ -77,12 +89,13 @@ Generates a two-stage match schedule for the given teams.
         "homeTeam": "Hot operations",
         "awayTeam": "Best marketing",
         "matchTime": "2021-02-20T17:00:00"
-      },
-      ...
+      }
     ]
   }
 }
 ```
+
+A full example request is in `src/main/resources/teams.json`, and a full example response in `src/main/resources/response.json`.
 
 **Example with curl:**
 
@@ -96,7 +109,7 @@ curl -X POST http://localhost:8080/generate-random-matches \
 
 ```
 Match (sealed interface)
-├── OrderedMatch  – match with scheduled date (homeTeam, awayTeam, matchTime)
+├── OrderedMatch   – match with scheduled date (homeTeam, awayTeam, matchTime)
 └── UnOrderedMatch – unscheduled match used during schedule generation
 
 Gameplan
@@ -112,6 +125,7 @@ Gameplan
 
 | Test | Description |
 |------|-------------|
-| `test_generateSimpleMatchSchedule` | 6 teams → 15 matches per stage |
-| `test_generateMatchDay` | Random match day generates 3 matches using all 6 teams |
-| `test_swapSchedule` | Home/away teams are correctly swapped in stage 2 |
+| `test_generateMatchSchedule` | 6 teams → 15 matches per stage; verifies home/away swap between stages |
+| `test_generateStagePlan` | 6 teams → 15 matches with correct weekly scheduling |
+| `test_generateMatchDay` | Random match day generates 3 matches using all 6 teams exactly once |
+| `test_swapSchedule` | Home/away teams are correctly swapped; match dates increase by one week each |

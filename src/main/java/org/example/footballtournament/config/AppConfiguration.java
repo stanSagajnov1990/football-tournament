@@ -1,0 +1,9 @@
+package org.example.footballtournament.config;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableConfigurationProperties(AppConfigProperties.class)
+public class AppConfiguration {
+}
