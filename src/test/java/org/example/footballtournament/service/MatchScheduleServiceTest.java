@@ -3,6 +3,7 @@ package org.example.footballtournament.service;
 import org.example.footballtournament.config.AppConfigProperties;
 import org.example.footballtournament.domain.Gameplan;
 import org.example.footballtournament.domain.OrderedMatch;
+import org.example.footballtournament.domain.UnOrderedMatch;
 import org.example.footballtournament.dto.TeamRequest;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -71,17 +73,21 @@ class MatchScheduleServiceTest {
         for (var i = 0; i < result.matches().size(); i++) {
             var match = result.matches().get(i);
             System.out.println(match);
-
-            //            System.out.println("Spieltag " + (i + 1));
-
-//            matchDay.matches().forEach(match -> {
-//            });
         }
 
         System.out.println("----------------------------");
 
-
         System.out.println(result.matches());
+
+        // convert to list
+        List<OrderedMatch> matches = result.matches();
+
+        var unorderedSet = matches.stream().map(match -> {
+            return new UnOrderedMatch(match.homeTeam(), match.awayTeam());
+        }).collect(Collectors.toList());
+
+        // assert that the matches are unique
+        assertThat(unorderedSet).hasSize(15);
     }
 
     @Test
