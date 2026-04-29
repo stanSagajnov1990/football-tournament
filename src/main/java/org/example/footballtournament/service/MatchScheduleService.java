@@ -3,6 +3,7 @@ package org.example.footballtournament.service;
 import org.example.footballtournament.domain.*;
 import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -11,9 +12,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 @Service
 public class MatchScheduleService {
 
+    private final static Logger log = getLogger(MatchScheduleService.class);
 
     public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
 
@@ -27,7 +31,20 @@ public class MatchScheduleService {
 
         var secondStage = swapSchedule(firstStage, matchTime);
 
-        return new Gameplan(firstStage, secondStage);
+        Gameplan gameplan = new Gameplan(firstStage, secondStage);
+
+        log.info("Generated gameplan - first stage: " );
+        for (var match : gameplan.firstStage().matches()) {
+//            log.info(match.toString());
+            System.out.println(match.toString());
+        }
+
+        log.info("Generated gameplan - second stage: ");
+        for (var match : gameplan.secondStage().matches()) {
+            System.out.println(match.toString());
+//            log.info(match.toString());
+        }
+        return gameplan;
     }
 
     public Gameplan.StagePlan generateStagePlan(List<TeamRequest> teams, LocalDateTime startDate) {

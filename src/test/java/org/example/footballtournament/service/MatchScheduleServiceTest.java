@@ -17,8 +17,9 @@ class MatchScheduleServiceTest {
 
     MatchScheduleService sut = new MatchScheduleService();
 
+
     @Test
-    void test_generateSimpleMatchSchedule() {
+    void test_generateMatchSchedule() {
         // Arrange
         List<TeamRequest> teams = new ArrayList<>();
         teams.add(new TeamRequest("Team A", null));
@@ -30,6 +31,36 @@ class MatchScheduleServiceTest {
 
         // Act
         var result = sut.generateMatchSchedule(teams);
+
+        // Assert
+        assertThat(result.firstStage().matches()).hasSize(15);
+        assertThat(result.secondStage().matches()).hasSize(15);
+
+        // assert that the teams are swapped
+        for (var i = 0; i < result.firstStage().matches().size(); i++) {
+            var teamFromFirstStage = result.firstStage().matches().get(i);
+            var teamFromSecondStage = result.secondStage().matches().get(i);
+
+            assertThat(teamFromFirstStage.homeTeam()).isEqualTo(teamFromSecondStage.awayTeam());
+            assertThat(teamFromFirstStage.awayTeam()).isEqualTo(teamFromSecondStage.homeTeam());
+        }
+    }
+
+    @Test
+    void test_generateStagePlan() {
+        // Arrange
+        List<TeamRequest> teams = new ArrayList<>();
+        teams.add(new TeamRequest("Team A", null));
+        teams.add(new TeamRequest("Team B", null));
+        teams.add(new TeamRequest("Team C", null));
+        teams.add(new TeamRequest("Team D", null));
+        teams.add(new TeamRequest("Team E", null));
+        teams.add(new TeamRequest("Team F", null));
+
+        var startDate = LocalDateTime.parse("2020-10-17T17:00");
+
+        // Act
+        var result = sut.generateStagePlan(teams, startDate);
 
         // Assert
         assertThat(result.matches()).hasSize(15);
@@ -100,16 +131,27 @@ class MatchScheduleServiceTest {
 
         assertThat(result.matches().getFirst().homeTeam()).isEqualTo("Team B");
         assertThat(result.matches().getFirst().awayTeam()).isEqualTo("Team A");
+        assertThat(result.matches().getFirst().matchTime()).isEqualTo(startDate.plusWeeks(1));
 
         assertThat(result.matches().get(1).homeTeam()).isEqualTo("Team D");
         assertThat(result.matches().get(1).awayTeam()).isEqualTo("Team C");
+        assertThat(result.matches().get(1).matchTime()).isEqualTo(startDate.plusWeeks(2));
 
-        assertThat(result.matches().get(2)).isEqualTo(new OrderedMatch("Team F", "Team E", null));
+        assertThat(result.matches().get(2).homeTeam()).isEqualTo("Team F");
+        assertThat(result.matches().get(2).awayTeam()).isEqualTo("Team E");
+        assertThat(result.matches().get(2).matchTime()).isEqualTo(startDate.plusWeeks(3));
 
-        assertThat(result.matches().get(3)).isEqualTo(new OrderedMatch("Team H", "Team G", null));
+        assertThat(result.matches().get(3).homeTeam()).isEqualTo("Team H");
+        assertThat(result.matches().get(3).awayTeam()).isEqualTo("Team G");
+        assertThat(result.matches().get(3).matchTime()).isEqualTo(startDate.plusWeeks(4));
 
-        assertThat(result.matches().get(4)).isEqualTo(new OrderedMatch("Team J", "Team I", null));
+        assertThat(result.matches().get(4).homeTeam()).isEqualTo("Team J");
+        assertThat(result.matches().get(4).awayTeam()).isEqualTo("Team I");
+        assertThat(result.matches().get(4).matchTime()).isEqualTo(startDate.plusWeeks(5));
 
-        assertThat(result.matches().getLast()).isEqualTo(new OrderedMatch("Team L", "Team K", null));
+        assertThat(result.matches().get(5).homeTeam()).isEqualTo("Team L");
+        assertThat(result.matches().get(5).awayTeam()).isEqualTo("Team K");
+        assertThat(result.matches().get(5).matchTime()).isEqualTo(startDate.plusWeeks(6));
+
     }
 }
