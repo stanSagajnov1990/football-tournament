@@ -105,6 +105,13 @@ curl -X POST http://localhost:8080/generate-random-matches \
   -d @src/main/resources/teams.json
 ```
 
+**Example with httpie:**
+
+```bash
+http --body POST localhost:8080/generate-random-matches < /path-to-json/teams.json
+```
+
+
 ## Domain Model
 
 ```
