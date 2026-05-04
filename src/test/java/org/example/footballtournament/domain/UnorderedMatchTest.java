@@ -11,6 +11,14 @@ class UnorderedMatchTest {
     @Test
     void testEquals() {
         var match1 = new UnorderedMatch("Team A", "Team B");
+        var match2 = new UnorderedMatch("Team A", "Team B");
+
+        assertEquals(match1, match2);
+    }
+
+    @Test
+    void testEquals_swappedTeams() {
+        var match1 = new UnorderedMatch("Team A", "Team B");
         var match2 = new UnorderedMatch("Team B", "Team A");
 
         assertEquals(match1, match2);

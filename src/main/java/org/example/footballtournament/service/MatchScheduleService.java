@@ -27,7 +27,7 @@ public class MatchScheduleService {
     }
 
     public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
-        // start date requited by business
+        // start date required by business
         var startDate = LocalDateTime.parse(appConfigProperties.tournament().startDate());
 
         StagePlan firstStage = generateStagePlan(teams, startDate);
