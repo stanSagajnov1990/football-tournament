@@ -3,7 +3,8 @@ package org.example.footballtournament.service;
 import org.example.footballtournament.config.AppConfigProperties;
 import org.example.footballtournament.domain.Gameplan;
 import org.example.footballtournament.domain.OrderedMatch;
-import org.example.footballtournament.domain.UnOrderedMatch;
+import org.example.footballtournament.domain.StagePlan;
+import org.example.footballtournament.domain.UnorderedMatch;
 import org.example.footballtournament.dto.TeamRequest;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +84,7 @@ class MatchScheduleServiceTest {
         List<OrderedMatch> matches = result.matches();
 
         var unorderedSet = matches.stream().map(match -> {
-            return new UnOrderedMatch(match.homeTeam(), match.awayTeam());
+            return new UnorderedMatch(match.homeTeam(), match.awayTeam());
         }).collect(Collectors.toList());
 
         // assert that the matches are unique
@@ -121,7 +122,7 @@ class MatchScheduleServiceTest {
     @Test
     void test_swapSchedule() {
         // Arrange
-        var stagePlan = new Gameplan.StagePlan(List.of(
+        var stagePlan = new StagePlan(List.of(
                 new OrderedMatch("Team A", "Team B", null),
                 new OrderedMatch("Team C", "Team D", null),
                 new OrderedMatch("Team E", "Team F", null),

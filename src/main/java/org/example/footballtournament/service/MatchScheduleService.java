@@ -30,7 +30,7 @@ public class MatchScheduleService {
         // start date requited by business
         var startDate = LocalDateTime.parse(appConfigProperties.tournament().startDate());
 
-        Gameplan.StagePlan firstStage = generateStagePlan(teams, startDate);
+        StagePlan firstStage = generateStagePlan(teams, startDate);
 
         var matchTime = firstStage.matches().getLast()
                 .matchTime()
@@ -52,7 +52,7 @@ public class MatchScheduleService {
         return gameplan;
     }
 
-    public Gameplan.StagePlan generateStagePlan(List<TeamRequest> teams, LocalDateTime startDate) {
+    public StagePlan generateStagePlan(List<TeamRequest> teams, LocalDateTime startDate) {
         AtomicReference<LocalDateTime> gameStartDate = new AtomicReference<>(startDate);
 
         Set<OrderedMatch> spieltagSet = new LinkedHashSet<>();
@@ -72,7 +72,7 @@ public class MatchScheduleService {
             });
         }
 
-        return new Gameplan.StagePlan(spieltagSet.stream().toList());
+        return new StagePlan(spieltagSet.stream().toList());
     }
 
     public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
@@ -91,7 +91,7 @@ public class MatchScheduleService {
                 continue;
             }
 
-            var match = new UnOrderedMatch(teamName.name(), teamName2.name());
+            var match = new UnorderedMatch(teamName.name(), teamName2.name());
 
             if (matchSet.contains(match) || spieltagSet.contains(match)) {
                 continue;
@@ -111,7 +111,7 @@ public class MatchScheduleService {
         return matchSet;
     }
 
-    public Gameplan.StagePlan swapSchedule(Gameplan.StagePlan stagePlan, LocalDateTime startDate) {
+    public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
 
         LinkedHashSet<OrderedMatch> matchDays = stagePlan.matches()
                 .stream()
@@ -120,7 +120,7 @@ public class MatchScheduleService {
                 .map(OrderedMatch::swapTeams)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        return new Gameplan.StagePlan(setMatchDates(matchDays.stream().toList(), startDate));
+        return new StagePlan(setMatchDates(matchDays.stream().toList(), startDate));
     }
 
     private List<OrderedMatch> setMatchDates(List<OrderedMatch> list, LocalDateTime startDate) {
