@@ -1,6 +1,6 @@
 package org.example.footballtournament.domain;
 
-public interface Match {
+public sealed interface Match permits OrderedMatch, UnorderedMatch {
 
     String homeTeam();
     String awayTeam();
