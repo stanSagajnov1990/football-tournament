@@ -14,6 +14,16 @@ import java.util.stream.IntStream;
 @Service
 public class MatchScheduleService {
 
+    public Gameplan generateGameplan(List<TeamRequest> teams) {
+        var firstStage = generateMatchSchedule(teams);
+
+        var secondStageStart = firstStage.matchDays().getLast().matches().getLast().matchTime().plusWeeks(3);
+
+        var secondStage = swapSchedule(firstStage, secondStageStart);
+
+        return new Gameplan(firstStage, secondStage);
+    }
+
     public StagePlan generateMatchSchedule(List<TeamRequest> teams) {
 
         Set<Match> spieltagSet = new LinkedHashSet<>();
@@ -59,39 +69,40 @@ public class MatchScheduleService {
     }
 
     public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
-        var incomingTeams = new ArrayList<>(teams);
-
-        Set<String> teamSet = new LinkedHashSet<>();
-        Set<Match> matchSet = new LinkedHashSet<>();
         var random = new Random();
 
-        while (matchSet.size() <= 2) {
+        while (true) {
+            var remaining = new ArrayList<>(teams);
+            Collections.shuffle(remaining, random);
 
-            var teamName = generateRandomTeam(incomingTeams, random);
-            var teamName2 = generateRandomTeam(incomingTeams, random);
+            Set<Match> matchSet = new LinkedHashSet<>();
+            boolean stuck = false;
 
-            if (teamName.equals(teamName2) || (teamSet.contains(teamName.name()) || teamSet.contains(teamName2.name()))) {
-                continue;
+            while (!remaining.isEmpty()) {
+                var team1 = remaining.remove(0);
+
+                TeamRequest opponent = null;
+                for (var candidate : remaining) {
+                    var match = new UnorderedMatch(team1.name(), candidate.name());
+                    if (!spieltagSet.contains(match) && !matchSet.contains(match)) {
+                        opponent = candidate;
+                        break;
+                    }
+                }
+
+                if (opponent == null) {
+                    stuck = true;
+                    break;
+                }
+
+                matchSet.add(new UnorderedMatch(team1.name(), opponent.name()));
+                remaining.remove(opponent);
             }
 
-            var match = new UnorderedMatch(teamName.name(), teamName2.name());
-
-            if (matchSet.contains(match) || spieltagSet.contains(match)) {
-                continue;
+            if (!stuck) {
+                return matchSet;
             }
-
-            matchSet.add(match);
-            teamSet.add(teamName.name());
-            teamSet.add(teamName2.name());
-
-            System.out.println(teamName);
-
-            incomingTeams.remove(teamName);
-            incomingTeams.remove(teamName2);
-
         }
-
-        return matchSet;
     }
 
     public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
@@ -123,9 +134,4 @@ public class MatchScheduleService {
         return new OrderedMatch(match.homeTeam(), match.awayTeam(), matchTime);
     }
 
-    private static TeamRequest generateRandomTeam(List<TeamRequest> teams, Random random) {
-        var randomIndex = random.nextInt(teams.size());
-
-        return teams.get(randomIndex);
-    }
 }

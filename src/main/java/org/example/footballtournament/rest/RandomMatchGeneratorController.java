@@ -2,7 +2,6 @@ package org.example.footballtournament.rest;
 
 import jakarta.validation.Valid;
 import org.example.footballtournament.domain.Gameplan;
-import org.example.footballtournament.domain.StagePlan;
 import org.example.footballtournament.dto.LeagueRequest;
 import org.example.footballtournament.service.MatchScheduleService;
 import org.slf4j.Logger;
@@ -27,14 +26,9 @@ public class RandomMatchGeneratorController {
     public ResponseEntity<Gameplan> generateRandomMatches(@Valid @RequestBody LeagueRequest leagueRequest) {
         logger.info("Received request to generate random matches for league: {}", leagueRequest.league());
 
-        var firstStage = matchScheduleService.generateMatchSchedule(leagueRequest.teams());
+        Gameplan gameplan = matchScheduleService.generateGameplan(leagueRequest.teams());
 
-        var matchTime = firstStage.matchDays().getLast()
-                .matches().getLast().matchTime()
-                .plusWeeks(3);
-        var secondStage = matchScheduleService.swapSchedule(firstStage, matchTime);
-
-        return ResponseEntity.ok(new Gameplan(firstStage, secondStage));
+        return ResponseEntity.ok(gameplan);
     }
 
 }
