@@ -1,78 +1,61 @@
 package org.example.footballtournament.service;
 
-import org.example.footballtournament.config.AppConfigProperties;
 import org.example.footballtournament.domain.*;
 import org.example.footballtournament.dto.TeamRequest;
 import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import static org.slf4j.LoggerFactory.getLogger;
+import java.util.stream.IntStream;
 
 @Service
 public class MatchScheduleService {
 
-    private final static Logger log = getLogger(MatchScheduleService.class);
+    public StagePlan generateMatchSchedule(List<TeamRequest> teams) {
 
-    private AppConfigProperties appConfigProperties;
+        Set<Match> spieltagSet = new LinkedHashSet<>();
 
-    public MatchScheduleService(AppConfigProperties appConfigProperties) {
-        this.appConfigProperties = appConfigProperties;
+        // 5 Spieltage
+        IntStream.range(0, 5).forEach(i -> {
+            System.out.println(i);
+
+            var matchDay = generateMatchDay(teams, spieltagSet);
+            spieltagSet.addAll(matchDay);
+        });
+
+        var matchDays = getMatchDays(spieltagSet);
+
+        return new StagePlan(matchDays);
     }
 
-    public Gameplan generateMatchSchedule(List<TeamRequest> teams) {
-        // start date required by business
-        var startDate = LocalDateTime.parse(appConfigProperties.tournament().startDate());
+    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet, LocalDateTime startDate) {
+        LocalDateTime date = startDate == null ? LocalDateTime.parse("2020-10-17T17:00") : startDate;
 
-        StagePlan firstStage = generateStagePlan(teams, startDate);
+        var matchDays = new ArrayList<MatchDay>();
+        for (var match : spieltagSet) {
+            if (!matchDays.isEmpty()) {
+                // start incrementing weeks after the first match
+                date = date.plusDays(7);
+            }
 
-        var matchTime = firstStage.matches().getLast()
-                .matchTime()
-                .plusWeeks(3);
+            if (matchDays.isEmpty() || matchDays.getLast().matches().size() == 3) {
+                var matches = new ArrayList<OrderedMatch>();
+                matches.add(createOrderedMatch(match, date));
+                matchDays.add(new MatchDay(matches));
 
-        var secondStage = swapSchedule(firstStage, matchTime);
+                continue;
+            }
 
-        Gameplan gameplan = new Gameplan(firstStage, secondStage);
-
-        log.info("Generated gameplan - first stage: " );
-        for (var match : gameplan.firstStage().matches()) {
-            System.out.println(match.toString());
+            matchDays.getLast().matches().add(createOrderedMatch(match, date));
         }
-
-        log.info("Generated gameplan - second stage: ");
-        for (var match : gameplan.secondStage().matches()) {
-            System.out.println(match.toString());
-        }
-        return gameplan;
+        return matchDays;
     }
 
-    public StagePlan generateStagePlan(List<TeamRequest> teams, LocalDateTime startDate) {
-        AtomicReference<LocalDateTime> gameStartDate = new AtomicReference<>(startDate);
-
-        Set<OrderedMatch> spieltagSet = new LinkedHashSet<>();
-        AtomicInteger index = new AtomicInteger(0);
-        for (TeamRequest team : teams) {
-            int currentIndex = index.incrementAndGet();
-
-            var restOfTeam = teams.subList(currentIndex, teams.size());
-
-
-            restOfTeam.forEach(team1 -> {
-                var match = new OrderedMatch(team.name(), team1.name(), gameStartDate.get());
-                spieltagSet.add(match);
-
-                // increase game start date by one week every game
-                gameStartDate.set(gameStartDate.get().plusWeeks(1));
-            });
-        }
-
-        return new StagePlan(spieltagSet.stream().toList());
+    public static @NonNull ArrayList<MatchDay> getMatchDays(Set<Match> spieltagSet) {
+        return getMatchDays(spieltagSet, null);
     }
 
     public Set<Match> generateMatchDay(List<TeamRequest> teams, Set<Match> spieltagSet) {
@@ -113,14 +96,14 @@ public class MatchScheduleService {
 
     public StagePlan swapSchedule(StagePlan stagePlan, LocalDateTime startDate) {
 
-        LinkedHashSet<OrderedMatch> matchDays = stagePlan.matches()
+        LinkedHashSet<Match> matchDays = stagePlan.matchDays()
                 .stream()
-//                .map(Gameplan.MatchDay::matches)
-//                .flatMap(Collection::stream)
+                .map(MatchDay::matches)
+                .flatMap(Collection::stream)
                 .map(OrderedMatch::swapTeams)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        return new StagePlan(setMatchDates(matchDays.stream().toList(), startDate));
+        return new StagePlan(getMatchDays(matchDays, startDate));
     }
 
     private List<OrderedMatch> setMatchDates(List<OrderedMatch> list, LocalDateTime startDate) {
